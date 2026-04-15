@@ -1,0 +1,25 @@
+# --- Environment Variables ---
+python-dotenv
+
+# --- Document Loaders & Parsers ---
+pypdf
+python-docx
+
+# --- Web Scraping ---
+requests
+beautifulsoup4
+pandas
+
+# --- Vietnamese NLP ---
+pyvi
+
+# --- LLM & AI Models ---
+google-genai
+langchain-google-genai
+langchain-huggingface
+
+# --- LangChain Ecosystem & Vector DB ---
+langchain
+langchain-community
+langchain-text-splitters
+chromadb
