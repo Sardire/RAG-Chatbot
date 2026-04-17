@@ -8,10 +8,10 @@ import os
 # Thêm src vào đường dẫn
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from src.config import setup_api_key
+from src.config import setup_api_key, set_up_hf_token
 from src.rag_utils import SimpleRAG
-from src.doc_utils import load_documents_from_folder
-from src.web_scraper import scrape_web
+from src.doc_utils import Converter
+from src.web_scraper import DataScraper
 
 def main():
     print("="*60)
@@ -20,19 +20,24 @@ def main():
     
     # Thiết lập API key
     api_key = setup_api_key()
+    hf_token = set_up_hf_token()
     
     # Tạo RAG
-    rag = SimpleRAG(api_key)
+    rag = SimpleRAG(api_key, hf_token)
+
+    # Tạo đối tượng xử lý dữ liệu
+    scraper = DataScraper(delay=5)
+    converter = Converter()
     
     # ===== PHẦN ĐỌC TÀI LIỆU MỚI =====
     data_folder = "data"  # Thư mục chứa tài liệu
 
     # Web scraping
-    scrape_web()
+    scraper.scrape_web()
     
     # File scraping (bao gồm cả file tổng hợp web scraping)
     print(f"\n📂 Đang đọc tài liệu từ thư mục: {data_folder}/")
-    tai_lieu = load_documents_from_folder(data_folder)
+    tai_lieu = converter.load_documents_from_folder(data_folder)
     
     if not tai_lieu:
         print("⚠️  Không tìm thấy tài liệu nào trong thư mục data/")

@@ -11,9 +11,11 @@ from .config import (
     MODEL_NAME, K_RETRIEVAL
 )
 
+# Import từ file .env nếu có
+
 class SimpleRAG:
     
-    def __init__(self, api_key=None):
+    def __init__(self, api_key=None, hf_token=None):
         """
         Khởi tạo RAG với API key
         
@@ -21,8 +23,15 @@ class SimpleRAG:
             api_key (str): Google API key (nếu None thì lấy từ biến môi trường)
         """
         # Cấu hình API key
-        os.environ["GOOGLE_API_KEY"] = api_key
-        client = genai.Client(api_key=api_key)
+        if api_key:
+            os.environ["GOOGLE_API_KEY"] = api_key
+        else:
+            raise ValueError("❌ Vui lòng cung cấp GOOGLE_API_KEY dưới dạng tham số hoặc biến môi trường.")
+        
+        if hf_token:
+            os.environ["HF_TOKEN"] = hf_token
+        else:
+            raise ValueError("❌ Vui lòng cung cấp HF_TOKEN dưới dạng tham số hoặc biến môi trường.")
         
         # Khởi tạo LLM 
         self.llm = ChatGoogleGenerativeAI(
@@ -33,9 +42,8 @@ class SimpleRAG:
         )
         
         # Dòng mới (sử dụng model embedding mới)
-        os.environ["HF_TOKEN"] = os.environ.get("HF_TOKEN")
-        model_name = "dangvantuan/vietnamese-embedding"
-        model_kwargs = {'device': 'cpu'} # Chuyển thành 'cuda' nếu bạn có card đồ họa NVIDIA
+        model_name = "intfloat/multilingual-e5-small"
+        model_kwargs = {'device': 'cpu'}
         encode_kwargs = {'normalize_embeddings': True}
 
         self.embeddings = HuggingFaceEmbeddings(
@@ -65,7 +73,7 @@ class SimpleRAG:
         
         # Bước 1: Chia nhỏ tài liệu thành các đoạn nhỏ
         text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=CHUNK_SIZE,     
+            chunk_size=CHUNK_SIZE,
             chunk_overlap=CHUNK_OVERLAP
         )
         
@@ -73,15 +81,10 @@ class SimpleRAG:
         docs = text_splitter.create_documents(documents)
         self.doc_count = len(docs)
         print(f"  → Đã chia thành {self.doc_count} đoạn nhỏ")
-
-        # Trước khi tạo docs, hãy tokenize nội dung
-        tokenized_docs = [tokenize(doc) for doc in documents]
-        docs = text_splitter.create_documents(tokenized_docs)
         
         # Bước 2: Tạo vector store (biến mỗi đoạn thành vector và lưu lại)
         print("  → Đang tạo vector database...")
         self.vectorstore = Chroma.from_documents(docs, self.embeddings)
-        
         # Bước 3: Tạo chain trả lời (kết hợp tìm kiếm + sinh câu trả lời)
         self.qa_chain = RetrievalQA.from_chain_type(
             llm=self.llm,
@@ -108,20 +111,18 @@ class SimpleRAG:
         if not self.qa_chain:
             return "❌ Chưa có tài liệu. Hãy gọi load_documents() trước."
 
-            # Tokenize câu hỏi trước khi tìm kiếm
-        tokenized_question = tokenize(question)
-        
         # Nếu muốn xem đoạn tài liệu được truy xuất
         if show_context:
             # Lấy các đoạn liên quan
-            docs = self.vectorstore.similarity_search(tokenized_question, k=K_RETRIEVAL)
+            if self.vectorstore:
+                docs = self.vectorstore.similarity_search(question, k=K_RETRIEVAL)
             print("\n📖 Đoạn tài liệu được truy xuất:")
             for i, doc in enumerate(docs, 1):
                 print(f"  {i}. {doc.page_content[:200]}...")
             print("-" * 50)
         
         # Gọi RAG để trả lời
-        result = self.qa_chain.invoke({"query": tokenized_question})
+        result = self.qa_chain.invoke({"query": question})
         return result['result']
     
     def ask_batch(self, questions):

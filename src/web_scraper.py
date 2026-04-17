@@ -4,6 +4,7 @@ import pandas as pd
 import os
 import time
 from datetime import datetime
+from .constants import POLICIES, PRODUCTS
 
 class DataScraper:
     """Lớp thu thập dữ liệu từ các nguồn"""
@@ -172,67 +173,53 @@ class DataScraper:
         
         print(f"📚 Đã lưu file tổng hợp: {output_file}")
 
+    def scrape_web(self):
+        # Xóa file cũ
+        combined_file = 'data/combined_data.txt'
+        raw_folder = 'data/raw'
+        
+        if os.path.exists(combined_file):
+            os.remove(combined_file)
+            print(f"🗑️  Đã xóa file cũ: {combined_file}")
+        
+        if os.path.exists(raw_folder):
+            for file in os.listdir(raw_folder):
+                file_path = os.path.join(raw_folder, file)
+                if os.path.isfile(file_path):
+                    os.remove(file_path)
+            print(f"🗑️  Đã xóa các file cũ trong {raw_folder}/")
+        scraper = DataScraper(delay=5)
+        
+        # ===== 1. THU THẬP CHÍNH SÁCH =====
+        print("\n" + "="*60)
+        print("📜 THU THẬP CHÍNH SÁCH ĐỔI TRẢ HÀNG")
+        print("="*60)
+        
+        for url, name in POLICIES:
+            scraper.scrape_policy(url, name)
+        
+        # ===== 2. THU THẬP DANH SÁCH MẶT HÀNG =====
+        print("\n" + "="*60)
+        print("🛒 THU THẬP DANH SÁCH MẶT HÀNG")
+        print("="*60)
 
-# ============= PHẦN CHẠY THỬ =============
-def scrape_web():
-    # Xóa file cũ
-    combined_file = 'data/combined_data.txt'
-    raw_folder = 'data/raw'
-    
-    if os.path.exists(combined_file):
-        os.remove(combined_file)
-        print(f"🗑️  Đã xóa file cũ: {combined_file}")
-    
-    if os.path.exists(raw_folder):
-        for file in os.listdir(raw_folder):
-            file_path = os.path.join(raw_folder, file)
-            if os.path.isfile(file_path):
-                os.remove(file_path)
-        print(f"🗑️  Đã xóa các file cũ trong {raw_folder}/")
-    scraper = DataScraper(delay=5)
-    
-    # ===== 1. THU THẬP CHÍNH SÁCH =====
-    print("\n" + "="*60)
-    print("📜 THU THẬP CHÍNH SÁCH ĐỔI TRẢ HÀNG")
-    print("="*60)
-    
-    policies = [
-        ("https://conmuanho.com.vn/pages/chinh-sach-doi-tra-hang-hoa", "Con Mua Nho"),
-        ("https://www.masterduelmeta.com/top-decks", "Master Duel Meta"),
-        ("https://www.thegioididong.com/", "The Gioi Di Dong"),
-    ]
-    
-    for url, name in policies:
-        scraper.scrape_policy(url, name)
-    
-    # ===== 2. THU THẬP DANH SÁCH MẶT HÀNG =====
-    print("\n" + "="*60)
-    print("🛒 THU THẬP DANH SÁCH MẶT HÀNG")
-    print("="*60)
-    
-    products = [
-        ("https://www.thegioididong.com/dtdd", "Dien Thoai Di Dong"),
-        ("https://fptshop.com.vn/dien-thoai", "Dien Thoai FPT"),
-        ("https://www.cellphones.com.vn/mobile", "Dien Thoai CellphoneS"),
-    ]
-    
-    for url, category in products:
-        scraper.scrape_product_list(url, category)
-    
-    # ===== 3. LƯU DỮ LIỆU =====
-    print("\n" + "="*60)
-    print("💾 LƯU DỮ LIỆU")
-    print("="*60)
-    
-    scraper.save_all_to_txt()
-    scraper.save_combined()
-    
-    # ===== 4. THỐNG KÊ =====
-    print("\n" + "="*60)
-    print("📊 THỐNG KÊ")
-    print("="*60)
-    print(f"   • Chính sách: {len(scraper.policies_data)} nguồn")
-    print(f"   • Danh sách mặt hàng: {len(scraper.products_data)} danh mục")
-    print(f"   • Tổng số: {len(scraper.policies_data) + len(scraper.products_data)} nguồn")
-    
-    print("\n✨ HOÀN TẤT!")
+        for url, category in PRODUCTS:
+            scraper.scrape_product_list(url, category)
+        
+        # ===== 3. LƯU DỮ LIỆU =====
+        print("\n" + "="*60)
+        print("💾 LƯU DỮ LIỆU")
+        print("="*60)
+        
+        scraper.save_all_to_txt()
+        scraper.save_combined()
+        
+        # ===== 4. THỐNG KÊ =====
+        print("\n" + "="*60)
+        print("📊 THỐNG KÊ")
+        print("="*60)
+        print(f"   • Chính sách: {len(scraper.policies_data)} nguồn")
+        print(f"   • Danh sách mặt hàng: {len(scraper.products_data)} danh mục")
+        print(f"   • Tổng số: {len(scraper.policies_data) + len(scraper.products_data)} nguồn")
+        
+        print("\n✨ HOÀN TẤT!")
