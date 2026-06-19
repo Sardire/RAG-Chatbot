@@ -18,6 +18,8 @@ chroma_db/
 
 # Evaluation
 evaluate.py
+langsmith_eval.py
+src/langsmith_eval.py
 examples_evaluation.py
 debug_retrieval.py
 eval_results/
@@ -25,3 +27,6 @@ evaluation_output/
 *.eval.jsonl
 *.eval.json
 evaluation_logs/
+
+# Data
+data/
