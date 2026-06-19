@@ -1,6 +1,6 @@
 # main.py
 """
-Chạy RAG chatbot từ command line
+Chạy RAG chatbot từ command line - Interactive mode
 """
 import sys
 import os
@@ -24,7 +24,6 @@ def main():
     
     # Tạo RAG
     rag = SimpleRAG(api_key, hf_token)
-
     # Tạo đối tượng xử lý dữ liệu
     scraper = DataScraper(delay=5)
     converter = Converter()
@@ -45,11 +44,10 @@ def main():
         return
     else:
         print(f"\n✅ Đã đọc {len(tai_lieu)} tài liệu")
-        
     
     # Nạp tài liệu
     rag.load_documents(tai_lieu)
-    
+
     # Vòng lặp hỏi đáp
     print("\n💬 Nhập câu hỏi (gõ 'thoat' để kết thúc, 'stats' để xem thông tin):\n")
     
@@ -69,7 +67,13 @@ def main():
             continue
         
         # Trả lời
-        cau_tra_loi = rag.ask(cau_hoi)
+        try:
+            cau_tra_loi = rag.ask(cau_hoi)
+        except Exception as e:
+            import traceback
+            print(f"❌ Lỗi hệ thống khi xử lý câu hỏi: {e}")
+            traceback.print_exc()
+            cau_tra_loi = "❌ Đã xảy ra lỗi trong quá trình xử lý câu hỏi. Vui lòng thử lại sau."
         print(f"\n🤖 Bot: {cau_tra_loi}\n")
 
 if __name__ == "__main__":

@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 
 class Converter:
@@ -9,7 +8,9 @@ class Converter:
             reader = PdfReader(file_path)
             text = ""
             for page in reader.pages:
-                text += page.extract_text()
+                extracted = page.extract_text()
+                if extracted:
+                    text += extracted + "\n"
             return text
         except Exception as e:
             print(f"❌ Lỗi đọc PDF {file_path}: {e}")
@@ -50,6 +51,10 @@ class Converter:
         
         documents = []
         folder = Path(folder_path)
+
+        if not folder.exists() or not folder.is_dir():
+            print(f"❌ Lỗi: Thư mục '{folder_path}' không tồn tại hoặc không hợp lệ.")
+            return documents
         
         # Các định dạng hỗ trợ
         supported_extensions = {

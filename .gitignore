@@ -15,3 +15,13 @@ chroma_db/
 # IDE
 .vscode/
 .idea/
+
+# Evaluation
+evaluate.py
+examples_evaluation.py
+debug_retrieval.py
+eval_results/
+evaluation_output/
+*.eval.jsonl
+*.eval.json
+evaluation_logs/

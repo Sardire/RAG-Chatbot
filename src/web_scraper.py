@@ -113,13 +113,14 @@ class DataScraper:
             safe_name = record['source'].replace(' ', '_').replace('/', '_')
             filename = f"{output_dir}/policy_{safe_name}_{record['scraped_at'][:10]}.txt"
             
-            with open(filename, 'w', encoding='utf-8') as f:
+            with open(filename, 'a', encoding='utf-8') as f:
                 f.write(f"[LOẠI DỮ LIỆU: CHÍNH SÁCH]\n")
                 f.write(f"Nguồn: {record['source']}\n")
                 f.write(f"URL: {record['url']}\n")
                 f.write(f"Ngày: {record['scraped_at']}\n")
                 f.write("="*60 + "\n\n")
                 f.write(record['content'])
+                f.write("\n\n" + "-"*60 + "\n\n")
             
             print(f"💾 Đã lưu chính sách: {filename}")
         
@@ -128,13 +129,14 @@ class DataScraper:
             safe_name = record['category'].replace(' ', '_').replace('/', '_')
             filename = f"{output_dir}/products_{safe_name}_{record['scraped_at'][:10]}.txt"
             
-            with open(filename, 'w', encoding='utf-8') as f:
+            with open(filename, 'a', encoding='utf-8') as f:
                 f.write(f"[LOẠI DỮ LIỆU: DANH SÁCH MẶT HÀNG]\n")
                 f.write(f"Danh mục: {record['category']}\n")
                 f.write(f"URL: {record['url']}\n")
                 f.write(f"Ngày: {record['scraped_at']}\n")
                 f.write("="*60 + "\n\n")
                 f.write(record['content'])
+                f.write("\n\n" + "-"*60 + "\n\n")
             
             print(f"💾 Đã lưu danh sách mặt hàng: {filename}")
     

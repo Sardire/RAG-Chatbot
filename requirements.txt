@@ -1,25 +1,38 @@
-# --- Environment Variables ---
-python-dotenv
+# This file is used to install all dependencies for the RAG-Chatbot project.
+# Run `pip install -r requirements.txt` to set up the environment.
 
-# --- Document Loaders & Parsers ---
+# Core LangChain & LangSmith
+langchain
+langchain-core
+langchain-community
+langchain-classic
+langchain_chroma
+langchain-text-splitters
+langsmith
+
+# LLM & Embeddings
+langchain-groq
+langchain-huggingface
+sentence-transformers
+torch
+
+# Vector Store
+chromadb
+
+# Retrievers (Keyword Search)
+rank_bm25
+
+# Document Loaders & Web Scraping
 pypdf
 python-docx
-
-# --- Web Scraping ---
 requests
 beautifulsoup4
 pandas
 
-# --- Vietnamese NLP ---
+# Utilities
+python-dotenv
 pyvi
 
-# --- LLM & AI Models ---
-google-genai
-langchain-google-genai
-langchain-huggingface
-
-# --- LangChain Ecosystem & Vector DB ---
-langchain
-langchain-community
-langchain-text-splitters
-chromadb
+# Frontend
+streamlit
+torchvision
