@@ -33,16 +33,13 @@ class SimpleRAG:
         if not hf_token:
             raise ValueError("❌ Vui lòng cung cấp HF_TOKEN.")
 
-        # FIX: truyền key trực tiếp, không ghi os.environ toàn cục
         self.llm = ChatGroq(
             model=MODEL_NAME,
             api_key=api_key,
             temperature=TEMPERATURE,
-            # Thêm giới hạn retry để tránh LangSmith hiển thị treo 10-20s khi bị rate limit
             max_retries=1, 
         )
 
-        # FIX: truyền token trực tiếp vào HuggingFaceEmbeddings
         self.embeddings = HuggingFaceEmbeddings(
             model_name="BAAI/bge-m3",
             model_kwargs={"device": "cpu"},
@@ -109,8 +106,7 @@ Trả lời:"""
         else:
             print("  → Đang tạo và lưu Vector database & BM25...")
             print("     (Quá trình này có thể mất vài phút, các lần sau sẽ nhanh hơn)")
-            
-            # FIX: chunk TRƯỚC, tokenize SAU
+
             text_splitter = RecursiveCharacterTextSplitter(
                 chunk_size=CHUNK_SIZE,
                 chunk_overlap=CHUNK_OVERLAP,
@@ -130,7 +126,7 @@ Trả lời:"""
                 metadata["original_content"] = chunk.page_content
                 
                 vector_docs.append(Document(
-                    page_content=f"passage: {tokenized_content}",
+                    page_content=f"passage: {chunk.page_content}",
                     metadata=metadata,
                 ))
                 
@@ -164,7 +160,6 @@ Trả lời:"""
             },
         )
 
-        # FIX: dùng LCEL, tách riêng chuỗi sinh câu trả lời để có thể tái sử dụng
         prompt = self._build_prompt()
 
         self.generation_chain = prompt | self.llm | StrOutputParser()
@@ -221,17 +216,15 @@ Keywords:""",
             if show_context:
                 print(f"⚠️ Lỗi Query Rewrite, dùng câu gốc: {e}")
 
-        # FIX: Tokenize câu hỏi bằng pyvi ĐỂ ĐỒNG BỘ với tài liệu đã lưu
         tokenized_query = tokenize(enhanced_question)
 
         # 1. Retrieve: Lấy ngữ cảnh song song
-        # Vector cần prefix 'query: '
-        vector_docs = self.vector_retriever.invoke(f"query: {tokenized_query}")
+        # Vector cần prefix 'query: ' (Dùng raw text cho BGE-M3)
+        vector_docs = self.vector_retriever.invoke(f"query: {enhanced_question}")
         # BM25 chỉ cần câu hỏi đã tokenize
         bm25_docs = self.bm25_retriever.invoke(tokenized_query)
 
         # Gộp kết quả bằng Reciprocal Rank Fusion (RRF)
-        # FIX: Dùng original_content từ metadata làm khóa gộp (dedup key)
         # vì page_content khác nhau giữa Vector ("passage: ...") và BM25 ("...")
         doc_scores = {}
         c = 60 # Hằng số RRF
@@ -245,7 +238,7 @@ Keywords:""",
             original = doc.metadata.get("original_content")
             if original:
                 return original
-            # Fallback: loại bỏ prefix "passage: " và thay dấu gạch dưới
+
             text = doc.page_content
             if text.startswith("passage: "):
                 text = text[len("passage: "):]
@@ -273,8 +266,6 @@ Keywords:""",
                 print(f"  [{i}] {doc.page_content[:150]}...")
 
         # 2. Generate: Sinh câu trả lời từ ngữ cảnh
-        # FIX: Dùng _get_clean_context để đảm bảo LLM luôn nhận văn bản sạch
-        # (không có prefix "passage:", không có dấu gạch dưới từ pyvi)
         context_parts = [_get_clean_context(doc) for doc in docs]
         context_str = "\n\n".join(context_parts)
         answer = self.generation_chain.invoke({
